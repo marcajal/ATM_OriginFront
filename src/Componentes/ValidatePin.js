@@ -3,8 +3,7 @@ import DataTable            from "../Componentes/DataTable"
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/AddBox';
-import { Link} from "react-router-dom";
-import {NumericKeyboard} from '../Componentes/NumericKeyboard/NumericKeyboard'
+import {NumericKeyboard} from '../Componentes/NumericKeyboard'
 import {
     Container,
     Tooltip,
@@ -12,37 +11,82 @@ import {
     Grid,
     IconButton,
     TextField,
-    Typography
+    Typography, Button
 } from "@material-ui/core";
 import Message from '../Componentes/Message';
-
 import NumberFormat from 'react-number-format';
-
-
-
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    Redirect,
+    useHistory,
+    useLocation
+  } from "react-router-dom";
 
 export const ValidatePin = () =>
 {
+    let history = useHistory();
+
+    const numeroTarjeta = history.location.state.numero;
     const [numeroPin, setNumeroPin] = useState('');
+    const [count, setCount] = useState(0);
     const [mensaje, setMensaje] = useState(false);
     const [tipoLabel, setTipoLabel] = useState('info');
     const [openCollapse, setOpenCollapse] = useState(false);
+   
 
+    const redirectPage = (page, text) => {
+        history.push({
+                        pathname : page,
+                        state :{message : text}
+                    });
+    }
+
+    
 
     const aceptar = () => {    
 
         if(numeroPin.length < 4)
         {
-            setMensaje('Debe ingresar PIN de 4 digitos');
+            setMensaje('Debe ingresar un PIN de 4 digitos');
             setOpenCollapse(true)
             setTipoLabel("warning");
             return;
         }
-        
-        fetch(`https://localhost:44314/api/tarjeta/security/${numeroPin}`, {
-        method: "GET"
+
+        let body = JSON.stringify({
+            numero: numeroTarjeta,
+            pin: numeroPin,
+            habilitada: true
         })
-        .then(response => {console.log('response: '+JSON.stringify(response))})
+        
+        fetch(`https://localhost:44314/api/tarjeta/security`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: body
+        })
+        
+        .then(response => response.text())
+        .then(text => {
+            try {
+                console.log(JSON.parse(text));
+                redirectPage('/operations', 'OK');
+            } catch(err) {
+                setCount(count + 1);
+                if(count === 4)
+                {
+                    redirectPage('/error', 'Tarjeta Bloqueada');
+                }
+                setMensaje('PIN Incorrecto');
+                setOpenCollapse(true)
+                setTipoLabel("error");
+                
+            }})
         .finally(function()
             {
                 // setMensaje('Eliminado correctamente');
@@ -64,7 +108,7 @@ export const ValidatePin = () =>
     // },[])
     
     
-    console.log('numeroPin: '+ numeroPin);
+    //console.log('numeroPin: '+ numeroPin);
     return(
         <Container>
            <Typography variant="h5" align="center" style={{fontFamily:"monospace"}}>
@@ -93,13 +137,11 @@ export const ValidatePin = () =>
                             max = {4}
             />
             </Grid> 
-        {/* <Link to="/create">
-                        <Tooltip title="Nuevo" placement="right" aria-label="add">
-                            <Fab style={{ color: "white", backgroundColor: "black", height: "40px", width: "40px" }}>
-                                <AddIcon />
-                            </Fab>
-                        </Tooltip>
-        </Link> */}
+            <Grid container alignItems="center" justify="center" direction="row" style={{paddingBottom: 1 }}>           
+            <Button variant="contained" color="secondary" 
+                    style={{fontSize: 11.5,width:132 }}
+                    onClick={() => redirectPage('/', 'OK')}> Salir </Button>
+            </Grid> 
             </Typography>
         </Container> 
         )

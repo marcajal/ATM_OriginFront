@@ -3,8 +3,7 @@ import DataTable            from "../Componentes/DataTable"
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/AddBox';
-import { Link} from "react-router-dom";
-import {NumericKeyboard} from '../Componentes/NumericKeyboard/NumericKeyboard'
+import {NumericKeyboard} from '../Componentes/NumericKeyboard'
 import {
     Container,
     Tooltip,
@@ -15,11 +14,17 @@ import {
     Typography
 } from "@material-ui/core";
 import Message from '../Componentes/Message';
-
 import NumberFormat from 'react-number-format';
 
-
-
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    Redirect,
+    useHistory,
+    useLocation
+  } from "react-router-dom";
 
 export const Home = () =>
 {
@@ -27,11 +32,24 @@ export const Home = () =>
     const [mensaje, setMensaje] = useState(false);
     const [tipoLabel, setTipoLabel] = useState('info');
     const [openCollapse, setOpenCollapse] = useState(false);
+    const [objTarjeta, setObjTarjeta] = useState([]);
 
+    
+    let history = useHistory();
+
+    const redirectPage = (page, text, numero) => {
+        console.log('numero: '+numero);
+        history.push({
+                        pathname : page,
+                        state :{
+                                message : text,
+                                numero : numero
+                                }
+                    });
+    }
 
     const aceptar = () => {    
 
-        console.log('numeroTarjeta: ',numeroTarjeta);
         if(numeroTarjeta.length < 16)
         {
             setMensaje('Debe ingresar 16 digitos');
@@ -47,7 +65,16 @@ export const Home = () =>
         window.fetch(`https://localhost:44314/api/tarjeta/number/${numeroTarjeta}`, {
         method: "GET"
         })
-        .then(response => {console.log('response: '+JSON.stringify(response))})
+        .then(response => response.text())
+        .then(text => {
+            try {
+                console.log(JSON.parse(text));
+                console.log('text.numero: '+ JSON.parse(text).numero);
+                redirectPage('/validate', 'OK', JSON.parse(text).numero);
+            } catch(err) {
+                redirectPage('/error', 'Número Incorrecto o Tarjeta Bloqueada');
+            }})
+
         .finally(function()
             {
                 // setMensaje('Eliminado correctamente');
@@ -69,7 +96,7 @@ export const Home = () =>
     // },[])
     
     
-    console.log('numeroTarjeta: '+ numeroTarjeta);
+    //console.log('numeroTarjeta: '+ numeroTarjeta);
     return(
         <Container>
            <Typography variant="h5" align="center" style={{fontFamily:"monospace"}}>
