@@ -1,27 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import {NumericKeyboard} from '../Componentes/NumericKeyboard'
-import {
-    Container,
-    Tooltip,
-    Fab,
-    Grid,
-    Button,
-    IconButton,
-    TextField,
-    Typography
-} from "@material-ui/core";
+import React, { useState} from 'react';
+import {Container,Grid,Button,Typography} from "@material-ui/core";
 import Message from '../Componentes/Message';
-import NumberFormat from 'react-number-format';
-
-import {
-    BrowserRouter as Router,
-    Switch,
-    Route,
-    Link,
-    Redirect,
-    useHistory,
-    useLocation
-  } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 
 export const PageError = (props) =>
 {
@@ -50,15 +30,9 @@ export const PageError = (props) =>
                 )}        
             </Grid>
             <Grid container alignItems="center" justify="center" direction="row" style={{ paddingTop: 10, paddingBottom: 1 }}>           
-            <Button onClick={() => backPage()}> Atras </Button>
+            <Button style={{fontSize: 15,width:132, color: "white", backgroundColor: "black"}} onClick={() => backPage()}> Atras </Button>
             </Grid> 
-        {/* <Link to="/create">
-                        <Tooltip title="Nuevo" placement="right" aria-label="add">
-                            <Fab style={{ color: "white", backgroundColor: "black", height: "40px", width: "40px" }}>
-                                <AddIcon />
-                            </Fab>
-                        </Tooltip>
-        </Link> */}
+       
             </Typography>
         </Container> 
         )

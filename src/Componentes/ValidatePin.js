@@ -1,35 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import DataTable            from "../Componentes/DataTable"
-import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
-import AddIcon from '@material-ui/icons/AddBox';
+import React, { useState} from 'react';
 import {NumericKeyboard} from '../Componentes/NumericKeyboard'
-import {
-    Container,
-    Tooltip,
-    Fab,
-    Grid,
-    IconButton,
-    TextField,
-    Typography, Button
-} from "@material-ui/core";
+import {Container,Grid,TextField,Typography, Button} from "@material-ui/core";
 import Message from '../Componentes/Message';
 import NumberFormat from 'react-number-format';
-import {
-    BrowserRouter as Router,
-    Switch,
-    Route,
-    Link,
-    Redirect,
-    useHistory,
-    useLocation
-  } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 
 export const ValidatePin = () =>
 {
     let history = useHistory();
 
+    const idTarjeta = history.location.state.id;
     const numeroTarjeta = history.location.state.numero;
+    const balanceTarjeta = history.location.state.balance;
     const [numeroPin, setNumeroPin] = useState('');
     const [count, setCount] = useState(0);
     const [mensaje, setMensaje] = useState(false);
@@ -37,13 +19,56 @@ export const ValidatePin = () =>
     const [openCollapse, setOpenCollapse] = useState(false);
    
 
-    const redirectPage = (page, text) => {
+    const redirectPage = (page, text, id, balance) => {
         history.push({
                         pathname : page,
-                        state :{message : text}
+                        state :{
+                                message : text,
+                                id : id,
+                                balance:balance
+                                }
                     });
     }
 
+
+    const bloquearTarjeta = () => {    
+        
+        let body = JSON.stringify({
+            id: idTarjeta,
+            numero: numeroTarjeta,
+            pin: numeroPin,
+            habilitada: false,
+            fechaVto: null,
+            balance:balanceTarjeta
+        })
+        
+        fetch(`https://localhost:44314/api/tarjeta`, {
+        method: "PUT",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: body
+        })
+        
+        .then(response => response.text())
+        .then(text => {
+            try {
+                
+                if(JSON.parse(text) === true)
+                {
+                    redirectPage('/error', 'Tarjeta Bloqueada', null, null);  
+                }
+
+            } catch(err) {
+                console.log('error');
+                
+            }})
+        .finally(function()
+            {
+            }
+        )
+    }
     
 
     const aceptar = () => {    
@@ -75,12 +100,13 @@ export const ValidatePin = () =>
         .then(text => {
             try {
                 console.log(JSON.parse(text));
-                redirectPage('/operations', 'OK');
+                redirectPage('/operations', 'OK', idTarjeta, JSON.parse(text).balance);
             } catch(err) {
+                console.log('count: '+count);
                 setCount(count + 1);
-                if(count === 4)
+                if(count === 3)
                 {
-                    redirectPage('/error', 'Tarjeta Bloqueada');
+                    bloquearTarjeta();
                 }
                 setMensaje('PIN Incorrecto');
                 setOpenCollapse(true)
@@ -89,10 +115,6 @@ export const ValidatePin = () =>
             }})
         .finally(function()
             {
-                // setMensaje('Eliminado correctamente');
-                // setOpenCollapse(true)
-                // setTipoLabel("success");
-                //setTimeout(() => obtenerDatos(), 3000);
             }
         )
     }
@@ -102,13 +124,7 @@ export const ValidatePin = () =>
         setMensaje(null);
         setOpenCollapse(false)
     }
-               
-    // useEffect(function () {
-    //         obtenerDatos();
-    // },[])
-    
-    
-    //console.log('numeroPin: '+ numeroPin);
+  
     return(
         <Container>
            <Typography variant="h5" align="center" style={{fontFamily:"monospace"}}>
@@ -140,7 +156,7 @@ export const ValidatePin = () =>
             <Grid container alignItems="center" justify="center" direction="row" style={{paddingBottom: 1 }}>           
             <Button variant="contained" color="secondary" 
                     style={{fontSize: 11.5,width:132 }}
-                    onClick={() => redirectPage('/', 'OK')}> Salir </Button>
+                    onClick={() => redirectPage('/', 'OK', null, null)}> Salir </Button>
             </Grid> 
             </Typography>
         </Container> 
