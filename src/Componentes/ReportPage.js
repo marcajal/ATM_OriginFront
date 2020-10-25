@@ -86,6 +86,7 @@ export const ReportPage = () =>
                                                 }}
                                         />
                         </Grid>
+                        
                         <Grid item xs={2} style={{paddingLeft: 32,marginTop:16 }}>
                         <NumberFormat
                             prefix={'$'}
